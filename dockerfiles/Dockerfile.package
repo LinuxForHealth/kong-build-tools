@@ -1,15 +1,25 @@
-ARG RESTY_IMAGE_BASE="alpine"
-ARG RESTY_IMAGE_TAG="3.12"
+ARG RESTY_IMAGE_BASE="ubuntu"
+ARG RESTY_IMAGE_TAG="bionic"
 ARG DOCKER_KONG_SUFFIX
 ARG KONG_SHA
 ARG DOCKER_REPOSITORY
+ARG DOCKER_FPM_IMAGE=linuxforhealth/docker-fpm:0.0.1
 
-FROM ${DOCKER_REPOSITORY}:kong-${RESTY_IMAGE_BASE}-${RESTY_IMAGE_TAG}-${DOCKER_KONG_SUFFIX} as kong
+FROM ${DOCKER_REPOSITORY}:kong-${RESTY_IMAGE_BASE}-${RESTY_IMAGE_TAG}-${DOCKER_KONG_SUFFIX} as KONG
 
-FROM ${RESTY_IMAGE_BASE}:${RESTY_IMAGE_TAG}
+FROM ${DOCKER_FPM_IMAGE} as FPM
 
-COPY --from=kong /tmp/build /tmp/build
+COPY --from=KONG /tmp/build /tmp/build
+COPY fpm-entrypoint.sh /fpm-entrypoint.sh
+COPY after-install.sh /after-install.sh
+COPY .rpmmacros /root/.rpmmacros
+ARG PRIVATE_KEY_FILE
+COPY ${PRIVATE_KEY_FILE} /kong.private.asc 
+ARG PRIVATE_KEY_PASSPHRASE
+ENV PRIVATE_KEY_PASSPHRASE ${PRIVATE_KEY_PASSPHRASE}
 
+ARG RESTY_IMAGE_BASE="ubuntu"
+ARG RESTY_IMAGE_TAG="xenial"
 ARG KONG_VERSION
 ARG KONG_PACKAGE_NAME
 ARG KONG_CONFLICTS
@@ -19,8 +29,8 @@ RUN mkdir -p /tmp/build/lib/systemd/system/
 COPY kong.service /tmp/build/lib/systemd/system/kong.service
 COPY kong.logrotate /tmp/build/etc/kong/kong.logrotate
 
-RUN cd /tmp/build && \
-    OUTPUT_FILE_SUFFIX="${OUTPUT_FILE_SUFFIX}."$(echo ${BUILDPLATFORM} | awk -F "/" '{ print $2}') && \
-    mkdir /output && \
-    tar -zcvf /output/${KONG_PACKAGE_NAME}-${KONG_VERSION}${OUTPUT_FILE_SUFFIX}.apk.tar.gz usr etc
+RUN /fpm-entrypoint.sh
+
+FROM alpine
+COPY --from=FPM /output /output
 

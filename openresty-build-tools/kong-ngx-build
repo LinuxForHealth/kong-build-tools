@@ -5,7 +5,7 @@ set -e
 SCRIPT_PATH=
 PREFIX=
 DOWNLOAD_CACHE=work
-OPENRESTY_VER="1.17.8.2"
+OPENRESTY_VER=
 OPENSSL_VER=
 LUAROCKS_VER=
 PCRE_VER=
@@ -18,6 +18,8 @@ OS=
 DIST=
 DIST_VER=
 NGINX_EXTRA_MODULES=()
+
+# set to s390x for LinuxONE; unset for amd64 or arm64
 PROCESSOR_TYPE=s390x
 
 PARAMS=""
@@ -426,29 +428,19 @@ main() {
       if [ ! -f Makefile ]; then
         OPENRESTY_RPATH=${OPENRESTY_RPATH:-$OPENSSL_INSTALL/lib}
 
-	if [ $PROCESSOR_TYPE == "s390x" ]; then
-          echo "Setting OpenResty OPTS for s390x"
-          # Remove --with-pcre-jit
-          OPENRESTY_OPTS=(
-            "--prefix=$OPENRESTY_PREFIX"
-            "--with-cc-opt='-I$OPENSSL_INSTALL/include'"
-            "--with-http_ssl_module"
-            "--with-http_realip_module"
-            "--with-http_stub_status_module"
-            "--with-http_v2_module"
-            "-j$NPROC"
-          )
-        else
-	  OPENRESTY_OPTS=(
-            "--prefix=$OPENRESTY_PREFIX"
-            "--with-cc-opt='-I$OPENSSL_INSTALL/include'"
-            "--with-pcre-jit"
-            "--with-http_ssl_module"
-            "--with-http_realip_module"
-            "--with-http_stub_status_module"
-            "--with-http_v2_module"
-            "-j$NPROC"
-          )
+	OPENRESTY_OPTS=(
+          "--prefix=$OPENRESTY_PREFIX"
+          "--with-cc-opt='-I$OPENSSL_INSTALL/include'"
+          "--with-http_ssl_module"
+          "--with-http_realip_module"
+          "--with-http_stub_status_module"
+          "--with-http_v2_module"
+          "-j$NPROC"
+        )
+
+	if [ ! "$PROCESSOR_TYPE" == "s390x" ]; then
+          # pcre does not compile on s390x
+	  OPENRESTY_OPTS+=('--with-pcre-jit')
         fi
 
         if [ "$EDITION" == 'enterprise' ]; then
@@ -491,7 +483,7 @@ main() {
         fi
 
 	if [ $PROCESSOR_TYPE == "s390x" ]; then
-	  if [ $OPENRESTY_VER == "1.17.8.1" || $OPENRESTY_VER == "1.17.8.2" ]; then
+	  if [ $OPENRESTY_VER == "1.17.8.1" ] || [ "$OPENRESTY_VER" == "1.17.8.2" ]; then
             # Change the configure file for s390x
             sed -i '742,785s/.*/#&/;717,726s/.*/#&/' ./configure
 	  fi
