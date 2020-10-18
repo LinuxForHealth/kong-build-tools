@@ -33,4 +33,3 @@ RUN /fpm-entrypoint.sh
 
 FROM alpine
 COPY --from=FPM /output /output
-

@@ -427,8 +427,7 @@ main() {
     pushd $OPENRESTY_DOWNLOAD
       if [ ! -f Makefile ]; then
         OPENRESTY_RPATH=${OPENRESTY_RPATH:-$OPENSSL_INSTALL/lib}
-
-	OPENRESTY_OPTS=(
+        OPENRESTY_OPTS=(
           "--prefix=$OPENRESTY_PREFIX"
           "--with-cc-opt='-I$OPENSSL_INSTALL/include'"
           "--with-http_ssl_module"
@@ -438,9 +437,9 @@ main() {
           "-j$NPROC"
         )
 
-	if [ ! "$PROCESSOR_TYPE" == "s390x" ]; then
+        if [ ! "$PROCESSOR_TYPE" == "s390x" ]; then
           # pcre does not compile on s390x
-	  OPENRESTY_OPTS+=('--with-pcre-jit')
+          OPENRESTY_OPTS+=('--with-pcre-jit')
         fi
 
         if [ "$EDITION" == 'enterprise' ]; then
@@ -482,11 +481,11 @@ main() {
           OPENRESTY_OPTS+=('--with-luajit-xcflags="-DLUAJIT_USE_VALGRIND -DLUA_USE_ASSERT -DLUA_USE_APICHECK -DLUAJIT_USE_SYSMALLOC"')
         fi
 
-	if [ $PROCESSOR_TYPE == "s390x" ]; then
-	  if [ $OPENRESTY_VER == "1.17.8.1" ] || [ "$OPENRESTY_VER" == "1.17.8.2" ]; then
+        if [ $PROCESSOR_TYPE == "s390x" ]; then
+          if [ $OPENRESTY_VER == "1.17.8.1" ] || [ "$OPENRESTY_VER" == "1.17.8.2" ]; then
             # Change the configure file for s390x
             sed -i '742,785s/.*/#&/;717,726s/.*/#&/' ./configure
-	  fi
+          fi
         fi
 
         eval ./configure ${OPENRESTY_OPTS[*]}
