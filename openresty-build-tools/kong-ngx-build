@@ -437,8 +437,8 @@ main() {
           "-j$NPROC"
         )
 
-        if [ ! "$PROCESSOR_TYPE" == "s390x" ]; then
-          # pcre does not compile on s390x
+        if [ ! $OPENRESTY_VER == "1.17.8.1" ] && [ ! "$OPENRESTY_VER" == "1.17.8.2" ]; then
+          # --with-pcre-jit is not needed with nginx 1.16.0 and later and does not compile on s390x
           OPENRESTY_OPTS+=('--with-pcre-jit')
         fi
 
