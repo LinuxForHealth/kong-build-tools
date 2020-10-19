@@ -3,10 +3,10 @@
 export SHELL:=/bin/bash
 
 VERBOSE?=false
-RESTY_IMAGE_BASE?=ubuntu
-RESTY_IMAGE_TAG?=bionic
-PACKAGE_TYPE?=deb
-PACKAGE_TYPE?=debian
+RESTY_IMAGE_BASE?=alpine
+RESTY_IMAGE_TAG?=3.12
+PACKAGE_TYPE?=apk
+#PACKAGE_TYPE?=debian
 
 TEST_ADMIN_PROTOCOL?=http://
 TEST_ADMIN_PORT?=8001
@@ -41,7 +41,7 @@ LIBYAML_VERSION ?= `grep LIBYAML_VERSION $(KONG_SOURCE_LOCATION)/.requirements |
 OPENRESTY_PATCHES ?= 1
 DOCKER_KONG_VERSION = 'master'
 DEBUG ?= 0
-RELEASE_DOCKER_ONLY ?= false
+RELEASE_DOCKER_ONLY ?= true
 
 DOCKER_MACHINE_ARM64_NAME?=docker-machine-arm64-${USER}
 
@@ -57,7 +57,7 @@ endif
 BUILDX_INFO ?= $(shell docker buildx 2>&1 >/dev/null; echo $?)
 
 ifeq ($(BUILDX),false)
-	DOCKER_COMMAND?=docker build --build-arg BUILDPLATFORM=x/amd64
+	DOCKER_COMMAND?=docker build --build-arg BUILDPLATFORM=x/s390x
 else
 	DOCKER_COMMAND?=docker buildx build --push --platform="linux/amd64,linux/arm64"
 endif
@@ -92,7 +92,7 @@ else
 	UPDATE_CACHE_COMMAND?=false
 endif
 
-DOCKER_REPOSITORY?=mashape/kong-build-tools
+DOCKER_REPOSITORY?=linuxforhealth/kong
 
 debug:
 	@echo ${CACHE}

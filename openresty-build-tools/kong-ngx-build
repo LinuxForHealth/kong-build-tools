@@ -24,6 +24,7 @@ PARAMS=""
 main() {
   OS=$(uname -s)
   NPROC=$(n_proc)
+  PROCESSOR_TYPE=$(uname -m)
   SCRIPT_PATH=$(dirname "$(canon_path $0)")
   OPENRESTY_PATCHES_DIR=$(canon_path "$SCRIPT_PATH/../openresty-patches")
 
@@ -427,13 +428,18 @@ main() {
         OPENRESTY_OPTS=(
           "--prefix=$OPENRESTY_PREFIX"
           "--with-cc-opt='-I$OPENSSL_INSTALL/include'"
-          "--with-pcre-jit"
           "--with-http_ssl_module"
           "--with-http_realip_module"
           "--with-http_stub_status_module"
           "--with-http_v2_module"
           "-j$NPROC"
         )
+
+        # --with-pcre-jit is not needed with nginx 1.16.0 and later and does not compile on s390
+        case "$OPENRESTY_VER" in
+          *1.17.8*) echo "--with-pcre-jit not required for OpenResty versions 1.17.8.x";;
+	  *) OPENRESTY_OPTS+=('--with-pcre-jit');;
+        esac
 
         if [ "$EDITION" == 'enterprise' ]; then
           OPENRESTY_OPTS+=('--add-module=/enterprise/kong-licensing/ngx_module')
@@ -472,6 +478,13 @@ main() {
         if [ $DEBUG == 1 ]; then
           OPENRESTY_OPTS+=('--with-debug')
           OPENRESTY_OPTS+=('--with-luajit-xcflags="-DLUAJIT_USE_VALGRIND -DLUA_USE_ASSERT -DLUA_USE_APICHECK -DLUAJIT_USE_SYSMALLOC"')
+        fi
+
+        if [ $PROCESSOR_TYPE == "s390x" ]; then
+          # Change the configure file for OpenResty 1.17.8.x versions
+          case "$OPENRESTY_VER" in
+            *1.17.8*) sed -i '742,785s/.*/#&/;717,726s/.*/#&/' ./configure;;
+          esac
         fi
 
         eval ./configure ${OPENRESTY_OPTS[*]}

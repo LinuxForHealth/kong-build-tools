@@ -1,0 +1,13 @@
+--- ./LuaJIT-2.1-20200102/src/vm_s390x.dasc	2020-01-02 22:10:34.000000000 -0600
++++ ./patch/src/vm_s390x.dasc	2020-10-13 15:23:16.000000000 -0500
+@@ -2540,8 +2540,8 @@
+     |  lg RB, 0(RD, BASE)
+     |  srag RB, RB, 47
+     |  load_false RC
+-    |  cghi RB, LJ_TTRUE
+-    |  je >1
++    |  clfi RB, LJ_TISTRUECOND
++    |  jl >1
+     |  load_true RC
+     |1:
+     |  stg RC, 0(RA, BASE)
