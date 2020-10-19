@@ -19,14 +19,12 @@ DIST=
 DIST_VER=
 NGINX_EXTRA_MODULES=()
 
-# set to s390x for LinuxONE; unset for amd64 or arm64
-PROCESSOR_TYPE=s390x
-
 PARAMS=""
 
 main() {
   OS=$(uname -s)
   NPROC=$(n_proc)
+  PROCESSOR_TYPE=$(uname -m)
   SCRIPT_PATH=$(dirname "$(canon_path $0)")
   OPENRESTY_PATCHES_DIR=$(canon_path "$SCRIPT_PATH/../openresty-patches")
 
@@ -437,10 +435,11 @@ main() {
           "-j$NPROC"
         )
 
-        if [ ! $OPENRESTY_VER == "1.17.8.1" ] && [ ! "$OPENRESTY_VER" == "1.17.8.2" ]; then
-          # --with-pcre-jit is not needed with nginx 1.16.0 and later and does not compile on s390x
-          OPENRESTY_OPTS+=('--with-pcre-jit')
-        fi
+        # --with-pcre-jit is not needed with nginx 1.16.0 and later and does not compile on s390
+        case "$OPENRESTY_VER" in
+          *1.17.8*) echo "--with-pcre-jit not required for OpenResty versions 1.17.8.x";;
+	  *) OPENRESTY_OPTS+=('--with-pcre-jit');;
+        esac
 
         if [ "$EDITION" == 'enterprise' ]; then
           OPENRESTY_OPTS+=('--add-module=/enterprise/kong-licensing/ngx_module')
