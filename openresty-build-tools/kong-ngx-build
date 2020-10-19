@@ -481,10 +481,10 @@ main() {
         fi
 
         if [ $PROCESSOR_TYPE == "s390x" ]; then
-          if [ $OPENRESTY_VER == "1.17.8.1" ] || [ "$OPENRESTY_VER" == "1.17.8.2" ]; then
-            # Change the configure file for s390x
-            sed -i '742,785s/.*/#&/;717,726s/.*/#&/' ./configure
-          fi
+          # Change the configure file for OpenResty 1.17.8.x versions
+          case "$OPENRESTY_VER" in
+            *1.17.8*) sed -i '742,785s/.*/#&/;717,726s/.*/#&/' ./configure;;
+          esac
         fi
 
         eval ./configure ${OPENRESTY_OPTS[*]}
