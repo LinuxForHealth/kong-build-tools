@@ -435,11 +435,10 @@ main() {
           "-j$NPROC"
         )
 
-        # --with-pcre-jit is not needed with nginx 1.16.0 and later and does not compile on s390
-        case "$OPENRESTY_VER" in
-          *1.17.8*) echo "--with-pcre-jit not required for OpenResty versions 1.17.8.x";;
-	  *) OPENRESTY_OPTS+=('--with-pcre-jit');;
-        esac
+        # --with-pcre-jit does not compile on s390x is not needed with later nginx versions
+        if version_lt $OPENRESTY_VER 1.15.8; then
+          OPENRESTY_OPTS+=('--with-pcre-jit');
+        fi
 
         if [ "$EDITION" == 'enterprise' ]; then
           OPENRESTY_OPTS+=('--add-module=/enterprise/kong-licensing/ngx_module')
@@ -481,9 +480,10 @@ main() {
         fi
 
         if [ $PROCESSOR_TYPE == "s390x" ]; then
-          # Change the configure file for OpenResty 1.17.8.x versions
+          # Change the OpenResty configure file for s390x compile
           case "$OPENRESTY_VER" in
             *1.17.8*) sed -i '742,785s/.*/#&/;717,726s/.*/#&/' ./configure;;
+            *1.15.8*) sed -i '730,773s/.*/#&/;704,713s/.*/#&/' ./configure;;
           esac
         fi
 
